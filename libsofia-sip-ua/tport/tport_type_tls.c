@@ -518,7 +518,7 @@ static ssize_t tport_tls_send(tport_t const *self,
 #if 1
   if (!tlstp->tlstp_buffer)
   {
-    tlstp->tlstp_buffer = su_alloc(self->tp_home, TLSBUFSIZE);
+    tlstp->tlstp_buffer = su_alloc((struct su_home_s *)self->tp_home, TLSBUFSIZE);
     SU_DEBUG_9(("su_alloc(): tlstp_buffer: %p\n", tlstp->tlstp_buffer));
   }
 #endif
@@ -555,13 +555,13 @@ static ssize_t tport_tls_send(tport_t const *self,
       if (buf + m != iov[j].siv_base)
         memcpy(buf + m, iov[j].siv_base, iov[j].siv_len);
       m += iov[j].siv_len;
-      iov[j].siv_len = 0;
+      //iov[j].siv_len = 0;
     }
 
     if (j == i)
       buf = iov[i].siv_base, m = iov[i].siv_len, j++;
-    //    else
-    //      iov[j].siv_base = buf, iov[j].siv_len = m;
+    else
+      iov[j].siv_base = buf, iov[j].siv_len = m;
 
     nerror = tls_write(tlstp->tlstp_context, buf, m);
 #endif
