@@ -83,7 +83,7 @@ find . -name installdox -delete
 %{_libdir}/libsofia-sip-ua.so.*
 
 %files devel
-#%doc libsofia-sip-ua/docs/html
+#doc libsofia-sip-ua/docs/html
 %dir %{_includedir}/sofia-sip-1.13
 %dir %{_includedir}/sofia-sip-1.13/sofia-sip
 %{_includedir}/sofia-sip-1.13/sofia-sip/*.h
@@ -97,14 +97,14 @@ find . -name installdox -delete
 %{_libdir}/libsofia-sip-ua-glib.so.*
 
 %files glib-devel
-#%doc libsofia-sip-ua-glib/docs/html
+#doc libsofia-sip-ua-glib/docs/html
 %{_includedir}/sofia-sip-1.13/sofia-sip/su_source.h
 %{_libdir}/libsofia-sip-ua-glib.so
 %{_libdir}/pkgconfig/sofia-sip-ua-glib.pc
 
 %files utils
 %{_bindir}/*
-#%{_mandir}/man1/*.1*
+#{_mandir}/man1/*.1*
 
 %changelog
 * Wed Aug 12 2020 FreeSWITCH Project <andrey@freeswitch.com> - 1.13.0-2
