@@ -6547,9 +6547,10 @@ static int nta_incoming_response_headers(nta_incoming_t *irq,
   if (!sip->sip_via) {
     clone = 1;
     /* 100 responses are not forwarded by proxies, so only include the topmost Via header */
+    /*
     if (sip->sip_status && sip->sip_status->st_status == 100)
       sip->sip_via = (sip_via_t *)msg_header_copy_one(home, (msg_header_t const *)irq->irq_via);
-    else
+    else */
       sip->sip_via = sip_via_copy(home, irq->irq_via);
   }
 
