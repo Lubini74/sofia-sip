@@ -509,84 +509,75 @@ static ssize_t tport_tls_send(tport_t const *self,
   {
     TLSBUFSIZE = 2048
   };
-  size_t i, j, n, m, size = 0;
+  size_t i, m, size = 0;
   ssize_t nerror;
   int oldmask, mask;
 
+  if (iovlen == 0 || (iovlen == 1 && iov[0].siv_len == 0))
+  {
+    int err = su_errno();
+    SU_DEBUG_3(("tls_write:  iovlen == 0 || (iovlen == 1 && iov[0].siv_len == 0) error %s\n", strerror(err)));
+    return -1;
+  }
+
   oldmask = tls_events(tlstp->tlstp_context, self->tp_events);
 
-#if 1
-  if (!tlstp->tlstp_buffer)
+  if (iovlen == 1) // Only one block
   {
-    tlstp->tlstp_buffer = su_alloc((struct su_home_s *)self->tp_home, TLSBUFSIZE);
-    SU_DEBUG_9(("su_alloc(): tlstp_buffer: %p\n", tlstp->tlstp_buffer));
-  }
-#endif
-
-  for (i = 0; i < iovlen; i = j)
-  {
-#if 0
-    nerror = tls_write(tlstp->tlstp_context,
-		  iov[i].siv_base,
-		  m = iov[i].siv_len);
-    j = i + 1;
-#else
-    char *buf = tlstp->tlstp_buffer;
-    unsigned tlsbufsize = TLSBUFSIZE;
-
-    if (i + 1 == iovlen)
-      buf = NULL; /* Don't bother copying single chunk */
-
-    if (buf &&
-        (char *)iov[i].siv_base - buf < TLSBUFSIZE &&
-        (char *)iov[i].siv_base - buf >= 0)
-    {
-      tlsbufsize = buf + TLSBUFSIZE - (char *)iov[i].siv_base;
-      assert(tlsbufsize <= TLSBUFSIZE);
-    }
-
-    for (j = i, m = 0; buf && j < iovlen; j++)
-    {
-      if (m + iov[j].siv_len > tlsbufsize)
-      {
-        SU_DEBUG_9(("Can's save more bytes to buf, i=%lu, j=%lu, m=%lu\n", i, j, m));
-        break;
-      }
-      if (buf + m != iov[j].siv_base)
-        memcpy(buf + m, iov[j].siv_base, iov[j].siv_len);
-      m += iov[j].siv_len;
-      //iov[j].siv_len = 0;
-    }
-
-    if (j == i)
-      buf = iov[i].siv_base, m = iov[i].siv_len, j++;
-    else
-      iov[j].siv_base = buf, iov[j].siv_len = m;
-
-    nerror = tls_write(tlstp->tlstp_context, buf, m);
-#endif
-
-    SU_DEBUG_9(("tport_tls_writevec: vec %p %p %lu (" MOD_ZD ")\n",
-                (void *)tlstp->tlstp_context, (void *)iov[i].siv_base, (LU)iov[i].siv_len,
+    nerror = tls_write(tlstp->tlstp_context, iov[0].siv_base, iov[0].siv_len);
+    SU_DEBUG_9(("tport_tls_writevec: single vec %p %p %lu (" MOD_ZD ")\n",
+                (void *)tlstp->tlstp_context, (void *)iov[0].siv_base, (LU)iov[0].siv_len,
                 nerror));
-
     if (nerror == -1)
     {
       int err = su_errno();
-      if (su_is_blocking(err))
-        break;
       SU_DEBUG_3(("tls_write: %s\n", strerror(err)));
-      return -1;
+      size = -1;
+      goto cleanup;
+    }
+    size = nerror;
+  }
+  else // Multiple blocks
+  {
+    if (!tlstp->tlstp_buffer)
+    {
+      tlstp->tlstp_buffer = su_alloc((struct su_home_s *)self->tp_home, TLSBUFSIZE);
+      SU_DEBUG_9(("su_alloc(): tlstp_buffer: %p\n", tlstp->tlstp_buffer));
     }
 
-    n = (size_t)nerror;
-    size += n;
+    char *buf = tlstp->tlstp_buffer;
+    unsigned tlsbuffree = TLSBUFSIZE;
+    for (i = 0; i < iovlen; i++)
+    {
+      if (iov[i].siv_len == 0)
+      {
+        continue;
+      }
+      if (tlsbuffree < iov[i].siv_len)
+      {
+        size = -1;
+        SU_DEBUG_3(("tls_write: Message is too big for TLS Buffer error %s\n", strerror(su_errno())));
+        goto cleanup;
+      }
+      unsigned mi = iov[i].siv_len;
+      memcpy(buf, iov[i].siv_base, mi);
+      tlsbuffree -= mi;
+      buf += mi;
+      m += mi;
+    }
 
-    /* Return if the write buffer is full for now */
-    if (n != m)
-      break;
+    nerror = tls_write(tlstp->tlstp_context, tlstp->tlstp_buffer, m);
+    if (nerror == -1)
+    {
+      SU_DEBUG_3(("tls_write: %s\n", strerror(su_errno())));
+      return -1;
+    }
+    SU_DEBUG_9(("tport_tls_writevec: vec %p %lu (" MOD_ZD ")\n", (void *)tlstp->tlstp_buffer, (LU)m, nerror));
+
+    size = (size_t)nerror;
   }
 
+cleanup:
   mask = tls_events(tlstp->tlstp_context, self->tp_events);
 
   if (oldmask != mask)
