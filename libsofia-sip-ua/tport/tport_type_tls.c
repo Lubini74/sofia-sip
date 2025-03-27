@@ -509,7 +509,8 @@ static ssize_t tport_tls_send(tport_t const *self,
   {
     TLSBUFSIZE = 2048
   };
-  size_t i, m, size = 0;
+  size_t m = 0;
+  size_t size = 0;
   ssize_t nerror;
   int oldmask, mask;
 
@@ -547,7 +548,7 @@ static ssize_t tport_tls_send(tport_t const *self,
 
     char *buf = tlstp->tlstp_buffer;
     unsigned tlsbuffree = TLSBUFSIZE;
-    for (i = 0; i < iovlen; i++)
+    for (size_t i = 0; i < iovlen; i++)
     {
       if (iov[i].siv_len == 0)
       {
