@@ -507,7 +507,7 @@ static ssize_t tport_tls_send(tport_t const *self,
   tport_tls_t *tlstp = (tport_tls_t *)self;
   enum
   {
-    TLSBUFSIZE = 2048
+    TLSBUFSIZE = (2048 *2)
   };
   size_t m = 0;
   size_t size = 0;
@@ -557,7 +557,7 @@ static ssize_t tport_tls_send(tport_t const *self,
       if (tlsbuffree < iov[i].siv_len)
       {
         size = -1;
-        SU_DEBUG_3(("tls_write: Message is too big for TLS Buffer error %s\n", strerror(su_errno())));
+        SU_DEBUG_1(("tls_write: Prepared message size %lu is bigger then TLS Buffer. Number of segments %lu \n", (m + iov[i].siv_len), iovlen));
         goto cleanup;
       }
       unsigned mi = iov[i].siv_len;
