@@ -38,7 +38,7 @@ AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADERS([config.h])
 
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 CFLAGS="$CFLAGS -DSU_DEBUG=0 $DEBUG_CFLAGS"
 ### checks for programs
@@ -52,7 +52,7 @@ AC_PROG_CPP
 AC_CHECK_PROG(ETAGS, etags, etags, echo)
 AC_CHECK_TOOL(AR, ar, ar)
 AC_CHECK_TOOL(LD, ld, ld)
-AC_PROG_LIBTOOL
+LT_INIT
 AM_PROG_CC_C_O
 
 SAC_ENABLE_NDEBUG
@@ -91,7 +91,7 @@ AX_COMPILER_VENDOR
 
 #  Enable 64 bit build
 AC_ARG_ENABLE(64,
-[AC_HELP_STRING([--enable-64],[build with 64 bit support])],[enable_64="$enable_64"],[enable_64="no"])
+[AC_ARG_HELP([--enable-64],[build with 64 bit support])],[enable_64="$enable_64"],[enable_64="no"])
 
 if test "x${ax_cv_c_compiler_vendor}"  =  "xsun" ; then
     if test "${enable_64}" = "yes"; then
@@ -112,17 +112,12 @@ esac
 AC_SUBST(SOFIA_PLAT_CFLAGS, $SOFIA_PLAT_CFLAGS)
 
 
-### checks for header files
-### -----------------------
-AC_HEADER_STDC
-
 ### checks for declarations
 ### -----------------------
 
 ### checks for types
 ### ----------------
 
-AC_TYPE_SIGNAL
 AC_TYPE_LONGLONG
 
 dnl
@@ -224,7 +219,6 @@ AC_C_VAR_FUNC
 AC_C_MACRO_FUNCTION
 AC_C_KEYWORD_STRUCT
 
-AC_HEADER_TIME
 AC_TYPE_SIZE_T
 
 AC_SYS_SA_LEN
