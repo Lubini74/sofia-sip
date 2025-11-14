@@ -5,13 +5,13 @@ dnl Licensed under LGPL. See file COPYING.
 dnl
 dnl ref: http://www.gnu.org/software/autoconf/manual/autoconf.info.gz
 dnl
-AC_PREREQ(2.57)
+AC_PREREQ([2.71])
 
 dnl information on the package
 dnl ---------------------------
 
 dnl update both the version for AC_INIT and the LIBSOFIA_SIP_UA_MAJOR_MINOR
-AC_INIT([sofia-sip], [1.13.17])
+AC_INIT([sofia-sip],[1.13.17])
 
 CFLAGS="$CFLAGS $CONFIGURE_CFLAGS"
 CXXFLAGS="$CXXFLAGS $CONFIGURE_CXXFLAGS"
@@ -91,7 +91,7 @@ AX_COMPILER_VENDOR
 
 #  Enable 64 bit build
 AC_ARG_ENABLE(64,
-[AC_ARG_HELP([--enable-64],[build with 64 bit support])],[enable_64="$enable_64"],[enable_64="no"])
+[AC_ARG_PROGRAM([--enable-64],[build with 64 bit support])],[enable_64="$enable_64"],[enable_64="no"])
 
 if test "x${ax_cv_c_compiler_vendor}"  =  "xsun" ; then
     if test "${enable_64}" = "yes"; then
